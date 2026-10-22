@@ -12,7 +12,7 @@ permissions:
 jobs:
   apple:
     name: ${{ matrix.platform }} unsigned compile
-    runs-on: macos-15
+    runs-on: macos-15-intel
     timeout-minutes: 60
     strategy:
       fail-fast: false

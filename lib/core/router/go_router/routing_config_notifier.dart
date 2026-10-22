@@ -136,6 +136,13 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                     ),
                     if (isMobileBreakpoint)
                       GoRoute(
+                        name: 'profiles',
+                        path: 'profiles',
+                        pageBuilder: (_, state) =>
+                            customTransition(TransitionType.slide, state.pageKey, const ProfilesPage()),
+                      ),
+                    if (isMobileBreakpoint)
+                      GoRoute(
                         name: 'profileDetails',
                         path: 'profile-details/:id',
                         pageBuilder: (_, state) => customTransition(

@@ -86,4 +86,8 @@ PersistentKeepalive = 22-30
     expect(AmneziaWgImport.validate(conf.replaceFirst('[Peer]', 'FutureSecretSetting = secret\n[Peer]')), isNotNull);
     expect(AmneziaWgImport.validate('$conf\n[Peer]\nPublicKey = $key'), isNotNull);
   });
+  test('deeply nested imported JSON is rejected before overflowing the stack', () {
+    final nested = '${'[' * 100}0${']' * 100}';
+    expect(AmneziaWgImport.validate(nested), contains('nesting'));
+  });
 }

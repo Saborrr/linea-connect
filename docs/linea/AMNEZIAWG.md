@@ -49,3 +49,5 @@ ListenPort из `.conf` сохраняется. Для нескольких peer
 
 Скрипт `patch-core.py` расширяет только AWG-адаптер и импорт, не убирая остальные
 протоколы из build tags Hiddify. Новые регрессионные тесты входят в репозиторий.
+
+Лицензия официального backend: [MIT / WireGuard LLC](licenses/AmneziaWG-MIT.txt).

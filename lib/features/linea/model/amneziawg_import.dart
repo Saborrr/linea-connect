@@ -147,10 +147,11 @@ class AmneziaWgImport {
     return null;
   }
 
-  static String? _validateJson(dynamic node) {
+  static String? _validateJson(dynamic node, [int depth = 0]) {
+    if (depth > 64) return 'AmneziaWG: configuration nesting is too deep';
     if (node is List) {
       for (final child in node) {
-        final issue = _validateJson(child);
+        final issue = _validateJson(child, depth + 1);
         if (issue != null) return issue;
       }
     } else if (node is Map) {
@@ -164,7 +165,7 @@ class AmneziaWgImport {
         return _validateParameters(values);
       }
       for (final child in node.values) {
-        final issue = _validateJson(child);
+        final issue = _validateJson(child, depth + 1);
         if (issue != null) return issue;
       }
     }

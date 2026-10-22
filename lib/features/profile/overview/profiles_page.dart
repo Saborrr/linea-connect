@@ -27,7 +27,7 @@ class ProfilesPage extends HookConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(t.pages.profiles.title),
+        title: Text(Localizations.localeOf(context).languageCode == 'ru' ? 'Подключения' : 'Connections'),
         actions: [
           IconButton(
             onPressed: () => ref.read(foregroundProfilesUpdateNotifierProvider.notifier).trigger(),

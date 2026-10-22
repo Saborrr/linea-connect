@@ -13,7 +13,7 @@ import 'dart:io';
 import 'package:hiddify/features/linea/data/diagnostic_journal.dart';
 import 'package:hiddify/features/linea/model/diagnostic_export.dart';
 
-import 'package:flutter/foundation.dart' show debugPrint, kReleaseMode;
+import 'package:flutter/foundation.dart' show debugPrint, kReleaseMode, kIsWeb;
 import 'package:hiddify/core/logger/log_level_compat.dart';
 import 'package:hiddify/core/logger/ring/log_ring.dart';
 import 'package:hiddify/core/logger/sinks/file_sink.dart';
@@ -243,7 +243,7 @@ void logStart() {
 
 /// phase 2 — the folders are ready, so the file can be opened
 void logAddFile(String path) {
-  _diagnosticJournal = DiagnosticJournal(File('${File(path).parent.path}/linea-diagnostics.jsonl'));
+  if (!kIsWeb) _diagnosticJournal = DiagnosticJournal(File('${File(path).parent.path}/linea-diagnostics.jsonl'));
   openLogFile(path);
   // on web the sink never opens, so no listener is attached at all
   if (!isLogFileOpen) return;

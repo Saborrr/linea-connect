@@ -37,7 +37,10 @@ class ProfilesModal extends HookConsumerWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-                  child: Text(t.pages.profiles.title, style: Theme.of(context).textTheme.titleMedium),
+                  child: Text(
+                    Localizations.localeOf(context).languageCode == 'ru' ? 'Подключения' : 'Connections',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                 ),
                 Expanded(
                   child: ListView.separated(

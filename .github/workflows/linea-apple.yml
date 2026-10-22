@@ -1,6 +1,12 @@
 name: Linea Apple compile checks
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to compile without signing
+        type: choice
+        default: all
+        options: [all, ios, macos]
 permissions:
   contents: read
 jobs:
@@ -11,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ios, macos]
+        platform: ${{ fromJSON(inputs.platform == 'ios' && '["ios"]' || inputs.platform == 'macos' && '["macos"]' || '["ios","macos"]') }}
     env:
       CI: 'true'
       FLUTTER_SUPPRESS_ANALYTICS: 'true'

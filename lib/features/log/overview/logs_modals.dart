@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/logger/logger_setup.dart';
 import 'package:hiddify/core/logger/ring/log_ring.dart';
-import 'package:hiddify/core/logger/sinks/file_sink.dart';
 import 'package:hiddify/core/notification/in_app_notification_controller.dart';
 import 'package:hiddify/core/router/bottom_sheets/bottom_sheets_notifier.dart';
 import 'package:hiddify/features/log/data/log_data_providers.dart';
@@ -15,6 +14,7 @@ import 'package:hiddify/features/log/data/log_path_resolver.dart';
 import 'package:hiddify/features/log/overview/logs_overview_notifier.dart';
 import 'package:hiddify/features/log/overview/logs_page.dart';
 import 'package:hiddify/utils/custom_loggers.dart';
+import 'package:hiddify/features/linea/model/diagnostic_export.dart';
 import 'package:hiddify/utils/platform_utils.dart';
 import 'package:hiddify/utils/uri_utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -25,31 +25,14 @@ import 'package:logging/logging.dart';
 /// one directly.
 final _log = appLogger('LogsShare');
 
-/// Step one: what to share at all.
-///
-/// The in-memory history is offered everywhere and can be filtered. A file is
-/// listed only when it exists and has something in it — the app keeps one on
-/// desktop only, and the core writes its own two beside it.
+/// Only sanitized event summaries are offered for export. Raw engine and crash
+/// files remain local and never enter the share sheet through this flow.
 class LogsShareModal extends ConsumerWidget {
   const LogsShareModal({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider).requireValue;
-    final paths = ref.watch(logPathResolverProvider);
-    final notifications = ref.watch(inAppNotificationControllerProvider);
-
-    final crash = paths.coreCrashFile();
-
-    final files = <(String, String, File)>[
-      if (PlatformUtils.isDesktop)
-        (t.pages.logs.errorLog, t.pages.logs.errorLogMsg, paths.appFile()),
-      (t.pages.logs.coreLog, t.pages.logs.coreLogMsg, paths.coreFile()),
-      // Absent until the core actually crashes, which is the point of it.
-      if (crash != null)
-        (t.pages.logs.coreCrash, t.pages.logs.coreCrashMsg, crash),
-    ].where(_worthOffering).toList();
-
     return SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -64,27 +47,10 @@ class LogsShareModal extends ConsumerWidget {
               ref.read(bottomSheetsNotifierProvider.notifier).showLogsRecent();
             },
           ),
-          for (final (title, subtitle, file) in files)
-            ListTile(
-              leading: const Icon(FluentIcons.document_20_regular),
-              title: Text(title),
-              subtitle: Text(subtitle),
-              onTap: () async {
-                Navigator.of(context).pop();
-                await _saveFileAs(file, t: t, notifications: notifications);
-              },
-            ),
         ],
       ),
     );
   }
-}
-
-/// A file nobody has written to is not worth a row: sharing it would hand over
-/// an empty file and read as if the log were lost.
-bool _worthOffering((String, String, File) entry) {
-  final file = entry.$3;
-  return file.existsSync() && file.lengthSync() > 0;
 }
 
 /// Step two, in-memory branch: adjust the filters, then copy or export.
@@ -206,16 +172,14 @@ Future<void> _copyLines(
   required Translations t,
   required InAppNotificationController notifications,
 }) async {
-  final text = records.map(formatRecord).join('\n');
+  final text = _diagnosticText(records);
 
   try {
     await Clipboard.setData(ClipboardData(text: text));
     notifications.showSuccessToast(t.common.msg.export.clipboard.success);
   } catch (e, stack) {
     _log.error('copying logs failed', e, stack);
-    notifications.showErrorToast(
-      t.common.msg.export.clipboard.contentTooLarge,
-    );
+    notifications.showErrorToast(t.common.msg.export.clipboard.contentTooLarge);
   }
 }
 
@@ -227,7 +191,7 @@ Future<void> _exportLines(
 }) async {
   final target = paths.appExportFile();
 
-  await writeLinesToFile(target.path, records.map(formatRecord));
+  await target.writeAsString(_diagnosticText(records), flush: true);
   await _saveFileAs(target, t: t, notifications: notifications);
 }
 
@@ -259,3 +223,13 @@ Future<void> _saveFileAs(
     notifications.showErrorToast(t.pages.logs.fileSaveFailed);
   }
 }
+
+String _diagnosticText(Iterable<LogRecord> records) => exportDiagnostics(
+  records.map(
+    (record) => DiagnosticEvent.classify(
+      at: record.time,
+      level: record.level.value,
+      message: record.message,
+    ),
+  ),
+);

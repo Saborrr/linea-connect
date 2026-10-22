@@ -1,3 +1,4 @@
+import 'package:hiddify/features/linea/model/diagnostic_export.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -135,7 +136,9 @@ class _LogsPageState extends ConsumerState<LogsPage> with PresLogger {
       // the oldest one, which is the end everybody watches.
       body: Column(
         children: [
-          Expanded(child: _LogList(logs: state.logs, controller: _scroll)),
+          Expanded(
+            child: _LogList(logs: state.logs, controller: _scroll),
+          ),
           const Divider(height: 1),
           LogFilterBar(
             category: state.category,
@@ -295,10 +298,7 @@ class LogFilterBar extends ConsumerWidget {
         // already selects everything.
         onSelected: (value) => onLevel(value!),
       ),
-      if (showCoreLevel) ...[
-        const SizedBox(width: 6),
-        const _CoreLevelChip(),
-      ],
+      if (showCoreLevel) ...[const SizedBox(width: 6), const _CoreLevelChip()],
     ];
 
     // A window narrower than the breakpoint reaches this size a frame before
@@ -406,7 +406,8 @@ class _DropdownChip<T> extends StatelessWidget {
       onSelected: (picked) =>
           onSelected(identical(picked, _all) ? null : picked as T),
       itemBuilder: (context) => [
-        if (allLabel case final all?) PopupMenuItem(value: _all, child: Text(all)),
+        if (allLabel case final all?)
+          PopupMenuItem(value: _all, child: Text(all)),
         for (final option in options)
           PopupMenuItem(value: option as Object, child: Text(nameOf(option))),
       ],
@@ -478,7 +479,8 @@ class _LogRow extends ConsumerWidget {
   /// single line can be shared without exporting the whole history.
   Future<void> _copy(BuildContext context, WidgetRef ref, Offset at) async {
     final t = ref.read(translationsProvider).requireValue;
-    final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
+    final overlay =
+        Overlay.of(context).context.findRenderObject()! as RenderBox;
 
     final picked = await showMenu<bool>(
       context: context,
@@ -501,7 +503,17 @@ class _LogRow extends ConsumerWidget {
     );
     if (picked != true) return;
 
-    await Clipboard.setData(ClipboardData(text: formatRecord(record)));
+    await Clipboard.setData(
+      ClipboardData(
+        text: exportDiagnostics([
+          DiagnosticEvent.classify(
+            at: record.time,
+            level: record.level.value,
+            message: record.message,
+          ),
+        ]),
+      ),
+    );
     ref
         .read(inAppNotificationControllerProvider)
         .showSuccessToast(t.common.msg.export.clipboard.success);

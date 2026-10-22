@@ -5,6 +5,7 @@
 //  Created by GFWFighter on 7/24/1402 AP.
 //
 
-BASE_BUNDLE_IDENTIFIER=apple.hiddify.com
-SERVICE_IDENTIFIER=com.hiddify.app
-DEVELOPMENT_TEAM=3JFTY5BP58
+BASE_BUNDLE_IDENTIFIER=io.github.saborrr.linea
+SERVICE_IDENTIFIER=io.github.saborrr.linea.service
+// Set your Apple Developer team locally before signing.
+DEVELOPMENT_TEAM=

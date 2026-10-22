@@ -77,3 +77,16 @@ windows/sign.cer
 /cert.pem
 /key.pem
 /sign.pfx
+
+# Linea private provisioning and locally entered profiles
+*.jks
+*.keystore
+*.p12
+*.mobileprovision
+.env
+.env.*
+!.env.example
+profiles.local.json
+*.ipa
+*.apk
+*.aab

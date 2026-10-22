@@ -20,8 +20,10 @@
 - Android SDK и Java 17 для Android.
 - Для Apple: Mac, Xcode, CocoaPods, свой Apple Developer team и подходящие entitlements.
 - Сетевой доступ к официальным Flutter/pub/GitHub/Maven источникам зависимостей.
-- Native core закреплён в `dependencies.properties`; прежде чем выпускать сборку,
-  проверить его происхождение, хеши, лицензии и поддерживаемые протоколы.
+- При текущей development-сборке Makefile загружает native core из upstream
+  `draft`. Это изменяемый канал: значение `core.version` применяется к ветке
+  `CHANNEL=prod`, а не к данному workflow. До релиза закрепить совместимую версию
+  и SHA-256, проверить лицензии и фактические протоколы.
 
 ## Проверки без зависимостей
 
@@ -32,8 +34,15 @@ dart tool/linea_checks.dart
 ## Android
 
 В репозитории запустить Actions → Linea Android development build → Run workflow.
-Workflow выполняет подготовку исходников/ядра, тесты и debug-сборку. В этой работе
-этот workflow ещё не выполнялся, APK отсутствует.
+Workflow выполняет подготовку исходников/ядра, тесты и debug-сборку.
+Первый запуск завершился успешно, прошли 203 Flutter-теста:
+https://github.com/Saborrr/linea-connect/actions/runs/39770773497.
+
+Готовый архив с app-debug.apk:
+https://github.com/Saborrr/linea-connect/actions/runs/39770773497/artifacts/12422677153.
+GitHub может потребовать вход для скачивания артефакта. Архив нужно распаковать.
+Срок хранения текущего артефакта по API: до 20.01.2027. Сборка из коммита 6aec6fb.
+Установка на устройстве в этой работе не выполнялась.
 
 Локальный эквивалент:
 

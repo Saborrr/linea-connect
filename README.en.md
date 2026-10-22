@@ -3,8 +3,12 @@
 Open-source personal VPN client project derived from
 [Hiddify](https://github.com/hiddify/hiddify-app), targeting Android, iOS and macOS.
 
-Initial source revision only. Native builds, device installation and connectivity
-have not been validated. Public fork: https://github.com/Saborrr/linea-connect.
+Initial development revision. The Android debug APK built successfully in
+[GitHub Actions](https://github.com/Saborrr/linea-connect/actions/runs/39770773497),
+with 203 Flutter tests passing. Another 39 policy/privacy checks passed in CI.
+[Download the APK archive](https://github.com/Saborrr/linea-connect/actions/runs/39770773497/artifacts/12422677153).
+Device installation, live connectivity and Apple builds have not been validated.
+Public fork: https://github.com/Saborrr/linea-connect.
 
 Changes: a distinct compact home screen and icons, separate app identifiers,
 core-managed automatic route selection, event-code-only diagnostic export,

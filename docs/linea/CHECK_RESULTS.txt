@@ -1,1 +1,8 @@
 PASS: 39 Linea policy and diagnostic checks
+
+GitHub checks run 39770618715: success, 39 checks.
+Android run 39770773497: success, 203 Flutter tests, APK build and upload.
+Build source: 6aec6fbdce0ac90a3e0b8c90fecf748e7806e5d9
+Artifact: 12422677153, Linea-Android-development
+Artifact ZIP SHA256: b64d54f9aec4780fd43e8ec6cf0ad6fe9c430fe53937487dbd7c5e23b18922b8
+No physical-device or user-server connectivity tests performed.

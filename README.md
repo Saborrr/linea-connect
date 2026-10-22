@@ -3,8 +3,15 @@
 Открытый VPN-клиент для Android, iPhone и Mac на основе
 [Hiddify](https://github.com/hiddify/hiddify-app). Рабочее имя: Linea.
 
-**Статус: исходники начальной версии. Установочные сборки и работа на устройствах
-в этой работе не подтверждены. Публичный форк: https://github.com/Saborrr/linea-connect.**
+**Статус: начальная development-версия. Android APK собран в GitHub Actions.
+Работа на устройствах и подключение к серверу пользователя ещё не проверены.**
+
+- [Скачать Android APK в архиве GitHub Actions](https://github.com/Saborrr/linea-connect/actions/runs/39770773497/artifacts/12422677153)
+- [Успешная Android-сборка и 203 Flutter-теста](https://github.com/Saborrr/linea-connect/actions/runs/39770773497)
+- [39 проверок политики и приватности](https://github.com/Saborrr/linea-connect/actions/runs/39770618715)
+
+Артефакт собран из коммита `6aec6fbdce0ac90a3e0b8c90fecf748e7806e5d9`.
+Это debug-сборка для испытаний; IPA и macOS app пока не собраны и не подписаны.
 
 ## Что изменено
 

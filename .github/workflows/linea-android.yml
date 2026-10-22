@@ -20,7 +20,7 @@ jobs:
           flutter-version: '3.38.5'
           channel: stable
           cache: true
-      - name: Prepare generated Dart code and pinned upstream native core
+      - name: Prepare generated Dart code and upstream development core
         run: make android-prepare
       - name: Run tests
         run: flutter test

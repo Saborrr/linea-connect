@@ -24,7 +24,7 @@ class ProfilesModal extends HookConsumerWidget {
       }
     });
 
-    final initialSize = PlatformUtils.isDesktop ? .60 : .35;
+    final initialSize = PlatformUtils.isDesktop ? .60 : .55;
     return SafeArea(
       child: asyncProfiles.when(
         data: (data) => DraggableScrollableSheet(
@@ -33,43 +33,39 @@ class ProfilesModal extends HookConsumerWidget {
           expand: false,
           builder: (context, scrollController) => ScrollConfiguration(
             behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-            child: Stack(
+            child: Column(
               children: [
-                ListView.separated(
-                  padding: const EdgeInsets.all(12).copyWith(bottom: 12 + 8 + 32),
-                  separatorBuilder: (context, index) => const Gap(12),
-                  controller: scrollController,
-                  itemBuilder: (context, index) => ProfileTile(key: ValueKey(data[index].id), profile: data[index]),
-                  itemCount: data.length,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                  child: Text(t.pages.profiles.title, style: Theme.of(context).textTheme.titleMedium),
                 ),
-                Positioned(
-                  bottom: 0,
-                  left: 16,
-                  right: 16,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        FilledButton.icon(
-                          label: Text(t.common.sort, maxLines: 1, overflow: TextOverflow.ellipsis),
-                          icon: const Icon(Icons.sort_rounded),
-                          onPressed: () => ref.read(dialogNotifierProvider.notifier).showSortProfiles(),
-                        ),
-                        FilledButton.icon(
-                          label: Text(
-                            t.pages.profiles.updateSubscriptions,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          icon: const Icon(Icons.sync_rounded),
-                          onPressed: () => ref.read(foregroundProfilesUpdateNotifierProvider.notifier).trigger(),
-                        ),
-                      ],
-                    ),
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(12),
+                    controller: scrollController,
+                    separatorBuilder: (context, index) => const Gap(4),
+                    itemBuilder: (context, index) => ProfileTile(key: ValueKey(data[index].id), profile: data[index]),
+                    itemCount: data.length,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      TextButton.icon(
+                        icon: const Icon(Icons.sort_rounded),
+                        label: Text(t.common.sort),
+                        onPressed: () => ref.read(dialogNotifierProvider.notifier).showSortProfiles(),
+                      ),
+                      TextButton.icon(
+                        icon: const Icon(Icons.sync_rounded),
+                        label: Text(t.common.update),
+                        onPressed: () => ref.read(foregroundProfilesUpdateNotifierProvider.notifier).trigger(),
+                      ),
+                    ],
                   ),
                 ),
               ],

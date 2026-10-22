@@ -108,11 +108,7 @@ class _LogsPageState extends ConsumerState<LogsPage> with PresLogger {
           const SizedBox(width: 4),
           IconButton(
             onPressed: state.paused ? notifier.resume : notifier.pause,
-            icon: Icon(
-              state.paused
-                  ? FluentIcons.play_20_regular
-                  : FluentIcons.pause_20_regular,
-            ),
+            icon: Icon(state.paused ? FluentIcons.play_20_regular : FluentIcons.pause_20_regular),
             tooltip: state.paused ? t.common.resume : t.common.pause,
             iconSize: 20,
           ),
@@ -123,8 +119,7 @@ class _LogsPageState extends ConsumerState<LogsPage> with PresLogger {
             iconSize: 20,
           ),
           IconButton(
-            onPressed: () =>
-                ref.read(bottomSheetsNotifierProvider.notifier).showLogsShare(),
+            onPressed: () => ref.read(bottomSheetsNotifierProvider.notifier).showLogsShare(),
             icon: const Icon(FluentIcons.share_20_regular),
             tooltip: t.common.share,
             iconSize: 20,
@@ -176,16 +171,12 @@ class _CoreLevelChip extends ConsumerWidget {
       onSelected: (value) async {
         if (value == null) return;
         // Read before the await: the status can change while it is in flight.
-        final connected =
-            !(ref.read(connectionNotifierProvider).value?.isDisconnected ??
-                true);
+        final connected = !(ref.read(connectionNotifierProvider).value?.isDisconnected ?? true);
         await ref.read(ConfigOptions.logLevel.notifier).update(value);
         // Nothing to reconnect while it is down — the next connection picks
         // this up on its own, so saying so would be noise.
         if (!connected) return;
-        ref
-            .read(inAppNotificationControllerProvider)
-            .showInfoToast(t.pages.logs.coreLogLevelMsg);
+        ref.read(inAppNotificationControllerProvider).showInfoToast(t.pages.logs.coreLogLevelMsg);
       },
     );
   }
@@ -219,9 +210,7 @@ class _BufferChip extends ConsumerWidget {
           children: [
             Text(
               t.pages.logs.buffer,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(width: 5),
             Text('$size', style: theme.textTheme.labelSmall),
@@ -324,11 +313,7 @@ class LogFilterBar extends ConsumerWidget {
               children: [
                 _search(theme, t),
                 const SizedBox(height: 8),
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  runSpacing: 6,
-                  children: chips,
-                ),
+                Wrap(crossAxisAlignment: WrapCrossAlignment.center, runSpacing: 6, children: chips),
               ],
             ),
     );
@@ -347,20 +332,11 @@ class LogFilterBar extends ConsumerWidget {
         isDense: true,
         filled: true,
         fillColor: theme.colorScheme.surfaceContainerHighest,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
         hintText: t.common.filter,
-        hintStyle: theme.textTheme.labelMedium?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
+        hintStyle: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         contentPadding: const EdgeInsets.only(right: 10, top: 9, bottom: 9),
-        prefixIcon: Icon(
-          FluentIcons.search_20_regular,
-          size: 15,
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
+        prefixIcon: Icon(FluentIcons.search_20_regular, size: 15, color: theme.colorScheme.onSurfaceVariant),
         prefixIconConstraints: const BoxConstraints(minWidth: 30),
       ),
     );
@@ -403,13 +379,10 @@ class _DropdownChip<T> extends StatelessWidget {
       tooltip: '',
       position: PopupMenuPosition.under,
       initialValue: current ?? _all,
-      onSelected: (picked) =>
-          onSelected(identical(picked, _all) ? null : picked as T),
+      onSelected: (picked) => onSelected(identical(picked, _all) ? null : picked as T),
       itemBuilder: (context) => [
-        if (allLabel case final all?)
-          PopupMenuItem(value: _all, child: Text(all)),
-        for (final option in options)
-          PopupMenuItem(value: option as Object, child: Text(nameOf(option))),
+        if (allLabel case final all?) PopupMenuItem(value: _all, child: Text(all)),
+        for (final option in options) PopupMenuItem(value: option as Object, child: Text(nameOf(option))),
       ],
       child: Container(
         padding: const EdgeInsets.only(left: 10, right: 4, top: 7, bottom: 7),
@@ -417,22 +390,10 @@ class _DropdownChip<T> extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+            Text(label, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
             const SizedBox(width: 5),
-            Text(
-              current == null ? allLabel ?? '' : nameOf(current),
-              style: theme.textTheme.labelSmall,
-            ),
-            Icon(
-              Icons.arrow_drop_down_rounded,
-              size: 18,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            Text(current == null ? allLabel ?? '' : nameOf(current), style: theme.textTheme.labelSmall),
+            Icon(Icons.arrow_drop_down_rounded, size: 18, color: theme.colorScheme.onSurfaceVariant),
           ],
         ),
       ),
@@ -452,19 +413,13 @@ class _LogList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (logs.isEmpty) {
       final t = ref.watch(translationsProvider).requireValue;
-      return Center(
-        child: Text(
-          t.common.empty,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      );
+      return Center(child: Text(t.common.empty, style: Theme.of(context).textTheme.bodySmall));
     }
 
     return ListView.separated(
       controller: controller,
       itemCount: logs.length,
-      separatorBuilder: (_, _) =>
-          const Divider(indent: 16, endIndent: 16, height: 1),
+      separatorBuilder: (_, _) => const Divider(indent: 16, endIndent: 16, height: 1),
       itemBuilder: (context, index) => _LogRow(record: logs[index]),
     );
   }
@@ -479,15 +434,11 @@ class _LogRow extends ConsumerWidget {
   /// single line can be shared without exporting the whole history.
   Future<void> _copy(BuildContext context, WidgetRef ref, Offset at) async {
     final t = ref.read(translationsProvider).requireValue;
-    final overlay =
-        Overlay.of(context).context.findRenderObject()! as RenderBox;
+    final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
 
     final picked = await showMenu<bool>(
       context: context,
-      position: RelativeRect.fromRect(
-        at & const Size(1, 1),
-        Offset.zero & overlay.size,
-      ),
+      position: RelativeRect.fromRect(at & const Size(1, 1), Offset.zero & overlay.size),
       items: [
         PopupMenuItem(
           value: true,
@@ -509,14 +460,14 @@ class _LogRow extends ConsumerWidget {
           DiagnosticEvent.classify(
             at: record.time,
             level: record.level.value,
-            message: record.message,
+            message: '${record.message} ${record.error ?? ''}',
+            loggerName: record.loggerName,
+            stack: record.stackTrace,
           ),
         ]),
       ),
     );
-    ref
-        .read(inAppNotificationControllerProvider)
-        .showSuccessToast(t.common.msg.export.clipboard.success);
+    ref.read(inAppNotificationControllerProvider).showSuccessToast(t.common.msg.export.clipboard.success);
   }
 
   @override
@@ -526,8 +477,7 @@ class _LogRow extends ConsumerWidget {
 
     return InkWell(
       onLongPress: () => _copy(context, ref, _center(context)),
-      onSecondaryTapDown: (details) =>
-          _copy(context, ref, details.globalPosition),
+      onSecondaryTapDown: (details) => _copy(context, ref, details.globalPosition),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         child: Column(
@@ -544,11 +494,7 @@ class _LogRow extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    record.loggerName,
-                    style: theme.textTheme.labelSmall,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  child: Text(record.loggerName, style: theme.textTheme.labelSmall, overflow: TextOverflow.ellipsis),
                 ),
                 Text(time, style: theme.textTheme.labelSmall),
               ],

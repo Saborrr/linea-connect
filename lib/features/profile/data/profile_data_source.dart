@@ -32,7 +32,7 @@ class ProfileDao extends DatabaseAccessor<Db> with _$ProfileDaoMixin, InfraLogge
   @override
   Future<ProfileEntry?> getByUrl(String url) async {
     return await (select(profileEntries)
-          ..where((tbl) => tbl.url.like('%$url%'))
+          ..where((tbl) => tbl.url.equals(url))
           ..limit(1))
         .getSingleOrNull();
   }
@@ -86,14 +86,20 @@ class ProfileDao extends DatabaseAccessor<Db> with _$ProfileDaoMixin, InfraLogge
   @override
   Future<void> insert(ProfileEntriesCompanion entry) async {
     await transaction(() async {
-      if (entry.active.present && entry.active.value) {
+      final current =
+          await (profileEntries.select()
+                ..where((tbl) => tbl.active.equals(true))
+                ..limit(1))
+              .getSingleOrNull();
+      final activate = current == null || (entry.active.present && entry.active.value);
+      if (activate) {
         await update(profileEntries).write(const ProfileEntriesCompanion(active: Value(false)));
       }
       final name = StringBuffer(entry.name.value);
       while (await getByName(name.toString()) != null) {
         name.write('${randomInt(0, 9).run()}');
       }
-      await into(profileEntries).insert(entry.copyWith(name: Value(name.toString())));
+      await into(profileEntries).insert(entry.copyWith(name: Value(name.toString()), active: Value(activate)));
     });
   }
 

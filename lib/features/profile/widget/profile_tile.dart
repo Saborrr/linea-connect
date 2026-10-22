@@ -14,6 +14,7 @@ import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
 import 'package:hiddify/core/router/go_router/helper/active_breakpoint_notifier.dart';
 import 'package:hiddify/core/widget/adaptive_icon.dart';
 import 'package:hiddify/core/widget/adaptive_menu.dart';
+import 'package:hiddify/features/linea/widget/connection_row.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
 import 'package:hiddify/features/profile/notifier/profile_notifier.dart';
 import 'package:hiddify/features/profile/overview/profiles_notifier.dart';
@@ -41,7 +42,12 @@ class ProfileTile extends HookConsumerWidget {
         ref.read(inAppNotificationControllerProvider).showErrorToast(t.presentShortError(err));
       },
       initialOnSuccess: () {
-        if (context.mounted && context.canPop()) context.pop();
+        if (!context.mounted) return;
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.goNamed('home');
+        }
       },
     );
 
@@ -63,11 +69,22 @@ class ProfileTile extends HookConsumerWidget {
       }
       if (selectActiveMutation.state.isInProgress) return;
       selectActiveMutation.setFuture(ref.read(profilesNotifierProvider.notifier).selectActiveProfile(profile.id));
-      if (context.canPop()) {
-        context.pop();
-      } else {
-        context.goNamed('home');
-      }
+    }
+
+    if (!isMain) {
+      final ru = Localizations.localeOf(context).languageCode == 'ru';
+      return ConnectionRow(
+        name: profile.name,
+        selected: profile.active,
+        margin: margin,
+        subtitle: profile.active
+            ? (ru ? 'Выбрано' : 'Selected')
+            : profile is RemoteProfileEntity
+            ? (ru ? 'Подписка' : 'Subscription')
+            : (ru ? 'Настройки VPN' : 'VPN configuration'),
+        trailing: ProfileActionButton(profile, true),
+        onTap: handleTap,
+      );
     }
 
     // Provider links (profile-web-page-url / support-url) show as separate pills

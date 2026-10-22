@@ -31,7 +31,7 @@ class CoreInterfaceMobile extends CoreInterface with InfraLogger {
   bool _isBgClientAvailable = false;
   bool _debug = false;
 
-  late LastStream<CoreStatus> _status;
+  LastStream<CoreStatus>? _status;
   ClientChannel? _fgChannel;
   ClientChannel? _bgChannel;
   @override
@@ -49,7 +49,7 @@ class CoreInterfaceMobile extends CoreInterface with InfraLogger {
     final status = statusChannel.receiveBroadcastStream().map(CoreStatus.fromEvent);
     final alerts = alertsChannel.receiveBroadcastStream().map(CoreStatus.fromEvent);
 
-    _status = LastStream(ValueConnectableStream(Rx.merge([status, alerts])).autoConnect());
+    _status ??= LastStream(Rx.merge([status, alerts]));
     try {
       await helloClient.sayHello(HelloRequest(name: "test"));
       loggy.info("core is already started!");
@@ -109,7 +109,7 @@ class CoreInterfaceMobile extends CoreInterface with InfraLogger {
   Future<CoreStatus> setupBackground(String path, String name) async {
     // if (!await waitUntilPort(portBack, false, stop)) return const CoreStatus.stopped(alert: CoreAlert.createService);
     if (!await stop()) return const CoreStatus.stopped(alert: CoreAlert.createService);
-    _status.clean();
+    _status!.clean();
     await methodChannel.invokeMethod("start", {
       "path": path,
       "name": name,
@@ -120,13 +120,14 @@ class CoreInterfaceMobile extends CoreInterface with InfraLogger {
 
     _isBgClientAvailable = true;
     loggy.info("Waiting for starting core");
+    waitForStartup:
     for (var i = 0; i < 20; i++) {
       try {
-        final res = await _status.get(timeout: const Duration(seconds: 1));
+        final res = await _status!.get(timeout: const Duration(seconds: 1));
 
         switch (res) {
           case CoreStarted() || CoreHotReloading():
-            break;
+            break waitForStartup;
           case CoreStopped():
             if (res.alert != null) {
               return res;

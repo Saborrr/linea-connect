@@ -13,7 +13,7 @@ jobs:
   apple:
     name: ${{ matrix.platform }} unsigned compile
     runs-on: macos-15
-    timeout-minutes: 40
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -23,13 +23,33 @@ jobs:
       FLUTTER_SUPPRESS_ANALYTICS: 'true'
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.3'
+          cache: false
       - uses: subosito/flutter-action@v2.21.0
         with:
           flutter-version: '3.38.5'
           channel: stable
           cache: true
-      - name: Prepare generated Dart code and upstream development core
-        run: make ${{ matrix.platform }}-prepare
+      - name: Prepare generated Dart code
+        run: make common-prepare
+      - name: Prepare pinned native core with AmneziaWG 3.1
+        run: bash tool/native/prepare-core.sh
+      - name: Verify AWG 2.0 and 3.1 tunnels
+        run: bash tool/native/test-core.sh hiddify-core/source
+      - name: Build native library
+        run: |
+          make -C hiddify-core/source ${{ matrix.platform }}
+          if [ "${{ matrix.platform }}" = ios ]; then
+            mkdir -p ios/Frameworks
+            cp -R hiddify-core/source/bin/HiddifyCore.xcframework ios/Frameworks/
+            cd ios
+            pod install --repo-update
+          else
+            mkdir -p hiddify-core/bin
+            cp hiddify-core/source/bin/hiddify-core.dylib hiddify-core/bin/
+          fi
       - name: Compile iPhone app and Packet Tunnel without signing
         if: matrix.platform == 'ios'
         run: flutter build ios --release --no-codesign

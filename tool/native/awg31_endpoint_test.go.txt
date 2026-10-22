@@ -1,0 +1,28 @@
+package awg
+
+import (
+ "strings"
+ "testing"
+ "github.com/sagernet/sing-box/option"
+ "github.com/stretchr/testify/require"
+)
+
+func TestLinea_Awg31IpcTranslation(t *testing.T) {
+ headerKey := hKey(t)
+ ipc, err := genIpcConfig(option.AwgEndpointOptions{
+  PrivateKey: hKey(t).String(),
+  Awg: option.AwgOptions{
+   S1:16, S2:16, S3:16, S4:16,
+   HeaderProtectionKey:headerKey.String(), ContentPaddingAddition:"0-64",
+   RekeyAfterTime:"100-120", RekeyTimeout:"4-6", RejectAfterTime:"170-190",
+   KeepaliveTimeout:"8-12", MaxHandshakeAttempts:"15-20",
+   RandomTrailers:true, DisableCookies:true,
+  },
+  Peers: []option.AwgPeerOptions{{PublicKey:hKey(t).PublicKey().String(), PersistentKeepalive:"22-30"}},
+ },nil)
+ require.NoError(t,err)
+ for _, line := range []string{"header_protection_key="+hHex(headerKey), "content_padding_addition=0-64", "rekey_after_time=100-120", "rekey_timeout=4-6", "reject_after_time=170-190", "keepalive_timeout=8-12", "max_handshake_attempts=15-20", "random_trailers=true", "disable_cookies=true", "persistent_keepalive_interval=22-30"} {
+  require.True(t, strings.Contains(ipc,line), "missing native parameter")
+ }
+ require.NoError(t,hApplyIpc(t,ipc))
+}

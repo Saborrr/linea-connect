@@ -1,6 +1,9 @@
 package com.hiddify.hiddify
 
 import android.util.Log
+import android.app.ActivityManager
+import android.content.Context
+import android.os.Build
 import com.hiddify.hiddify.bg.BoxService
 //import com.hiddify.hiddify.bg.BoxService.Companion.workingDir
 import com.hiddify.hiddify.constant.Status
@@ -22,6 +25,7 @@ import java.io.File
 class MethodHandler(private val scope: CoroutineScope) : FlutterPlugin,
     MethodChannel.MethodCallHandler {
     private var channel: MethodChannel? = null
+    private lateinit var appContext: Context
 
     companion object {
         const val TAG = "A/MethodHandler"
@@ -39,6 +43,7 @@ class MethodHandler(private val scope: CoroutineScope) : FlutterPlugin,
     }
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+        appContext = flutterPluginBinding.applicationContext
         channel = MethodChannel(
             flutterPluginBinding.binaryMessenger,
             channelName,
@@ -52,6 +57,22 @@ class MethodHandler(private val scope: CoroutineScope) : FlutterPlugin,
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
+            "getLastExitInfo" -> {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                    result.success(emptyList<Map<String, Any>>())
+                } else {
+                    runCatching {
+                        val manager = appContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                        manager.getHistoricalProcessExitReasons(appContext.packageName, 0, 5).map {
+                            mapOf("reason" to it.reason, "status" to it.status,
+                                "timestamp" to it.timestamp, "pss" to it.pss, "rss" to it.rss,
+                                "importance" to it.importance)
+                        }
+                    }.onSuccess { result.success(it) }
+                        .onFailure { result.success(emptyList<Map<String, Any>>()) }
+                }
+            }
+
             Trigger.AddGrpcClientPublicKey.method -> {
                 GlobalScope.launch {
                     result.runCatching {

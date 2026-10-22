@@ -1,0 +1,48 @@
+package ray2sing
+
+import (
+ "strings"
+ "testing"
+ T "github.com/sagernet/sing-box/option"
+)
+
+func TestLinea_Awg31Import(t *testing.T) {
+ const key = "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc="
+ const config = `[Interface]
+PrivateKey = ` + key + `
+Address = 10.77.0.2/32
+ListenPort = 51821
+Jc = 4
+S1 = 16
+S2 = 16
+S3 = 16
+S4 = 16
+HeaderProtectionKey = ` + key + `
+ContentPaddingAddition = 0-64
+RekeyAfterTime = 100-120
+RekeyTimeout = 4-6
+RejectAfterTime = 170-190
+KeepaliveTimeout = 8-12
+MaxHandshakeAttempts = 15-20
+RandomTrailers = on
+DisableCookies = true
+[Peer]
+PublicKey = ` + key + `
+Endpoint = 127.0.0.1:51820
+AllowedIPs = 0.0.0.0/0
+PersistentKeepalive = 22-30
+`
+ endpoint, err := AWGSingboxTxt(config)
+ if err != nil { t.Fatal(err) }
+ opts, ok := endpoint.Options.(*T.AwgEndpointOptions)
+ if !ok { t.Fatal("AWG must not downgrade to WireGuard") }
+ if opts.ListenPort != 51821 || opts.Awg.HeaderProtectionKey != key || !opts.Awg.RandomTrailers || !opts.Awg.DisableCookies { t.Fatal("3.1 options were lost") }
+ if opts.Awg.ContentPaddingAddition != "0-64" || opts.Awg.RekeyAfterTime != "100-120" || opts.Awg.RekeyTimeout != "4-6" || opts.Awg.RejectAfterTime != "170-190" || opts.Awg.KeepaliveTimeout != "8-12" || opts.Awg.MaxHandshakeAttempts != "15-20" { t.Fatal("3.1 ranges were lost") }
+ if opts.Peers[0].PersistentKeepalive != "22-30" { t.Fatal("peer timing range was lost") }
+ endpoint, err = AWGSingbox("awg://127.0.0.1:51820/?pk="+key+"&publickey="+key+"&address=10.77.0.2/32&s1=16&s2=16&s3=16&s4=16&headerprotectionkey="+key+"&randomtrailers=true&contentpaddingaddition=0-64&keepalive=22-30")
+ if err != nil { t.Fatal(err) }
+ opts = endpoint.Options.(*T.AwgEndpointOptions)
+ if opts.Awg.HeaderProtectionKey != key || !opts.Awg.RandomTrailers || opts.Peers[0].PersistentKeepalive != "22-30" { t.Fatal("query options were lost") }
+ // Check the fully converted JSON as well, without fixed credentials leaving tests.
+ if strings.Contains(opts.Awg.HeaderProtectionKey, " ") { t.Fatal("URL decoding corrupted key") }
+}

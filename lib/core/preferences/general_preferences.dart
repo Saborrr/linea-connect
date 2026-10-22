@@ -104,7 +104,7 @@ abstract class Preferences {
     (ref) => ref.watch(perAppProxyEnabled) ? ref.watch(perAppProxyMode) : null,
   );
 
-  static final markNewProfileActive = PreferencesNotifier.create<bool, bool>("mark_new_profile_active", true);
+  static final markNewProfileActive = PreferencesNotifier.create<bool, bool>("mark_new_profile_active", false);
 
   static final dynamicNotification = PreferencesNotifier.create<bool, bool>("dynamic_notification", true);
 

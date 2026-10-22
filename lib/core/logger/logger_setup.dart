@@ -9,6 +9,9 @@
 
 import 'dart:async';
 import 'dart:developer' as dev;
+import 'dart:io';
+import 'package:hiddify/features/linea/data/diagnostic_journal.dart';
+import 'package:hiddify/features/linea/model/diagnostic_export.dart';
 
 import 'package:flutter/foundation.dart' show debugPrint, kReleaseMode;
 import 'package:hiddify/core/logger/log_level_compat.dart';
@@ -80,8 +83,7 @@ int errorFrames = 4;
 /// than at whoever called it.
 const _loggerInternals = 'package:hiddify/core/logger/';
 
-bool _isOurs(String frame) =>
-    frame.contains(ownPackagePrefix) && !frame.contains(_loggerInternals);
+bool _isOurs(String frame) => frame.contains(ownPackagePrefix) && !frame.contains(_loggerInternals);
 
 /// Turns the first frame from our own code into `Class.method (file.dart:line)`.
 ///
@@ -126,12 +128,7 @@ String? originOf(StackTrace? stack) {
 StackTrace? _ownFrames(StackTrace? stack) {
   if (stack == null) return null;
 
-  final mine = stack
-      .toString()
-      .split('\n')
-      .where(_isOurs)
-      .take(errorFrames)
-      .toList();
+  final mine = stack.toString().split('\n').where(_isOurs).take(errorFrames).toList();
 
   if (mine.isEmpty) return null;
   return StackTrace.fromString(mine.join('\n'));
@@ -188,15 +185,26 @@ void logSetFileEnabled(bool on) {
 
 // ---------------------------------------------------------------------- ring
 
-void _toRing(LogRecord r) => logRing.add(r);
+DiagnosticJournal? _diagnosticJournal;
+void _toRing(LogRecord r) {
+  logRing.add(r);
+  _diagnosticJournal?.append(
+    DiagnosticEvent.classify(
+      at: r.time,
+      level: r.level.value,
+      message: '${r.message} ${r.error ?? ''}',
+      loggerName: r.loggerName,
+      stack: r.stackTrace,
+    ),
+  );
+}
 
 /// Writes the in-memory history to [path], for sharing.
 ///
 /// A phone in release keeps no log file — writing one continuously costs
 /// storage nobody reads. The history is in memory anyway, so it is written out
 /// only when the user actually asks to share it.
-Future<void> exportLogRing(String path) =>
-    writeLinesToFile(path, logRing.records.map(formatRecord));
+Future<void> exportLogRing(String path) => writeLinesToFile(path, logRing.records.map(formatRecord));
 
 // ------------------------------------------------ handles we may cancel later
 
@@ -235,6 +243,7 @@ void logStart() {
 
 /// phase 2 — the folders are ready, so the file can be opened
 void logAddFile(String path) {
+  _diagnosticJournal = DiagnosticJournal(File('${File(path).parent.path}/linea-diagnostics.jsonl'));
   openLogFile(path);
   // on web the sink never opens, so no listener is attached at all
   if (!isLogFileOpen) return;

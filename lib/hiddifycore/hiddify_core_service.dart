@@ -37,7 +37,10 @@ class HiddifyCoreService with InfraLogger {
   final Map<String, StreamSubscription?> subscriptions = {};
   List<OutboundGroup> latest = [];
 
-  Future<void> init() async {
+  Future<void>? _initialization;
+  Future<void> init() => _initialization ??= _initialize().whenComplete(() => _initialization = null);
+
+  Future<void> _initialize() async {
     await setup()
         .mapLeft((e) {
           loggy.error(e);
@@ -80,7 +83,11 @@ class HiddifyCoreService with InfraLogger {
     });
   }
 
-  TaskEither<String, Unit> setup() {
+  Future<Either<String, Unit>>? _setupInFlight;
+  TaskEither<String, Unit> setup() =>
+      TaskEither(() => _setupInFlight ??= _setup().run().whenComplete(() => _setupInFlight = null));
+
+  TaskEither<String, Unit> _setup() {
     return TaskEither(() async {
       try {
         final directories = ref.read(appDirectoriesProvider).requireValue;
@@ -93,11 +100,13 @@ class HiddifyCoreService with InfraLogger {
 
         await startListeningLogs("fg", core.fgClient);
         // await startListeningStatus("fg", core.fgClient);
-        if (!core.isSingleChannel()) {
-          await startListeningLogs("bg", core.bgClient);
-        }
         statusController.add(currentState);
-        await startListeningStatus("bg", core.bgClient);
+        // The foreground parser exists before a profile. The background VPN
+        // service does not: do not open gRPC streams to a stopped service.
+        if (await core.isActiveBg()) {
+          if (!core.isSingleChannel()) await startListeningLogs("bg", core.bgClient);
+          await startListeningStatus("bg", core.bgClient);
+        }
         // ref.read(coreRestartSignalProvider.notifier).restart();
         return right(unit);
       } catch (e) {
@@ -422,8 +431,8 @@ class HiddifyCoreService with InfraLogger {
   // }
 
   Stream<CoreStatus> watchStatus() async* {
-    await startListeningStatus("bg", core.bgClient);
-    yield* statusController.stream;
+    yield currentState;
+    yield* statusController.stream.distinct();
     // .endWith(const CoreStatus.stopped());
   }
 
@@ -433,16 +442,13 @@ class HiddifyCoreService with InfraLogger {
       () => cc
           .coreInfoListener(Empty(), options: grpcOptions)
           .doOnCancel(() {
-            loggy.error("status", "Canceld");
-            if (currentState == const CoreStatus.started()) currentState = const CoreStatus.stopped();
+            loggy.debug("status listener cancelled");
           })
           .doOnData((event) {
             loggy.debug("status", event);
-            if (currentState == const CoreStatus.started()) currentState = const CoreStatus.stopped();
           })
           .doOnDone(() {
-            loggy.error("status", "done");
-            if (currentState == const CoreStatus.started()) currentState = const CoreStatus.stopped();
+            loggy.debug("status listener closed");
           })
           .endWith(CoreInfoResponse(coreState: CoreStates.STOPPED))
           .map((event) {
@@ -452,7 +458,7 @@ class HiddifyCoreService with InfraLogger {
           }),
       // .endWith(const CoreStatus.stopped())
       onError: (error) {
-        loggy.error("Stream error in ${key}StatusListener: $error");
+        loggy.debug("status listener ended");
 
         // currentState = const CoreStatus.stopped();
         // statusController.add(currentState);
@@ -511,7 +517,14 @@ class HiddifyCoreService with InfraLogger {
       },
       cancelOnError: true,
       onError: (error) {
-        loggy.error('Stream error: $error');
+        if (error is GrpcError &&
+            (error.code == StatusCode.cancelled ||
+                (error.code == StatusCode.unavailable &&
+                    (currentState is CoreStopped || currentState is CoreStopping)))) {
+          loggy.debug('core stream closed while idle');
+        } else {
+          loggy.error('core stream failed', error);
+        }
         onError?.call(error);
         subscriptions[key]?.cancel();
         subscriptions.remove(key);

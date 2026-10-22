@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/hiddify/hiddify-core.git",
+  "revision": "399f1eba7b80254b7ed365edbddee58d772cb593",
+  "amneziawg": "v3.1.20260828",
+  "amneziawgRevision": "b5928efb6ca19f0153958460c3d141f04abc5c2e",
+  "go": "1.26.3"
+}

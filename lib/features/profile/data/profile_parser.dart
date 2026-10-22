@@ -5,6 +5,8 @@ import 'package:dartx/dartx.dart';
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hiddify/core/db/db.dart';
+import 'package:hiddify/core/preferences/general_preferences.dart';
+import 'package:hiddify/features/linea/model/amneziawg_import.dart';
 import 'package:hiddify/core/http_client/dio_http_client.dart';
 import 'package:hiddify/core/model/optional_range.dart';
 import 'package:hiddify/features/profile/data/profile_data_mapper.dart';
@@ -77,7 +79,7 @@ class ProfileParser with InfraLogger {
             tempFilePath: tempFilePath,
             profile: ProfileEntity.local(
               id: id,
-              active: true,
+              active: _ref.read(Preferences.markNewProfileActive),
               name: '',
               lastUpdate: DateTime.now(),
               userOverride: userOverride,
@@ -106,7 +108,7 @@ class ProfileParser with InfraLogger {
                 tempFilePath: tempFilePath,
                 profile: ProfileEntity.remote(
                   id: id,
-                  active: true,
+                  active: _ref.read(Preferences.markNewProfileActive),
                   name: '',
                   url: url,
                   lastUpdate: DateTime.now(),
@@ -435,7 +437,7 @@ class ProfileParser with InfraLogger {
 
   static String protocol(String content) {
     if (content.contains("[Interface]")) {
-      return ProxyType.wireguard.label;
+      return AmneziaWgImport.isAmnezia(content) ? ProxyType.awg.label : ProxyType.wireguard.label;
     }
     final lines = content.split('\n');
     String? name;

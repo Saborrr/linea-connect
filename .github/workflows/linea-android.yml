@@ -1,11 +1,18 @@
 name: Linea Android development build
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['lib/**', 'test/**', 'tool/native/**', '.github/workflows/linea-android.yml', 'android/**', 'pubspec.yaml']
 permissions:
   contents: read
+concurrency:
+  group: linea-android-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   android:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     env:
       CI: 'true'
       FLUTTER_SUPPRESS_ANALYTICS: 'true'
@@ -15,18 +22,55 @@ jobs:
         with:
           distribution: zulu
           java-version: '17'
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.3'
+          cache: false
+      - uses: nttld/setup-ndk@v1
+        id: ndk
+        with:
+          ndk-version: r28c
       - uses: subosito/flutter-action@v2.21.0
         with:
           flutter-version: '3.38.5'
           channel: stable
           cache: true
-      - name: Prepare generated Dart code and upstream development core
-        run: make android-prepare
-      - name: Run tests
+      - name: Prepare generated Dart code
+        run: make common-prepare
+      - name: Run application regressions
         run: flutter test
+      - name: Prepare pinned native core with AmneziaWG 3.1
+        run: bash tool/native/prepare-core.sh
+      - name: Verify AWG 2.0 and 3.1 tunnels and configuration import
+        run: bash tool/native/test-core.sh hiddify-core/source
+      - name: Build native Android library
+        env:
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+        run: |
+          make -C hiddify-core/source android
+          mkdir -p android/app/libs
+          cp hiddify-core/source/bin/hiddify-core.aar android/app/libs/
+      # Keep the development signing identity for subsequent updates. The key
+      # is only cached, never committed or included in a downloadable artifact.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: linea-android-development-signing-v1
       - name: Build development APK
-        run: flutter build apk --debug
+        run: flutter build apk --debug --build-name=0.2.0 --build-number=50001
+      - name: Record native source versions
+        run: cp tool/native/core.lock.json build/app/outputs/flutter-apk/core.lock.json
       - uses: actions/upload-artifact@v6
         with:
           name: Linea-Android-development
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: |
+            build/app/outputs/flutter-apk/app-debug.apk
+            build/app/outputs/flutter-apk/core.lock.json
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: Linea-interface-checks
+          path: build/linea-previews/*.png
+          if-no-files-found: ignore

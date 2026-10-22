@@ -14,7 +14,7 @@ import 'package:hiddify/features/log/data/log_path_resolver.dart';
 import 'package:hiddify/features/log/overview/logs_overview_notifier.dart';
 import 'package:hiddify/features/log/overview/logs_page.dart';
 import 'package:hiddify/utils/custom_loggers.dart';
-import 'package:hiddify/features/linea/model/diagnostic_export.dart';
+import 'package:hiddify/features/linea/data/diagnostic_report.dart';
 import 'package:hiddify/utils/platform_utils.dart';
 import 'package:hiddify/utils/uri_utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -85,11 +85,7 @@ class _LogsRecentModalState extends ConsumerState<LogsRecentModal> {
     final t = ref.watch(translationsProvider).requireValue;
     final paths = ref.watch(logPathResolverProvider);
     final notifications = ref.watch(inAppNotificationControllerProvider);
-    final matches = logRing.view(
-      minLevel: _minLevel,
-      category: _category,
-      text: _text,
-    );
+    final matches = logRing.view(minLevel: _minLevel, category: _category, text: _text);
 
     return SafeArea(
       child: Padding(
@@ -100,10 +96,7 @@ class _LogsRecentModalState extends ConsumerState<LogsRecentModal> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                t.pages.logs.recentLogs,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              child: Text(t.pages.logs.recentLogs, style: Theme.of(context).textTheme.titleMedium),
             ),
             LogFilterBar(
               category: _category,
@@ -116,40 +109,26 @@ class _LogsRecentModalState extends ConsumerState<LogsRecentModal> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    t.pages.logs.linesMatch(count: matches.length),
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
+                  Text(t.pages.logs.linesMatch(count: matches.length), style: Theme.of(context).textTheme.labelMedium),
                   const SizedBox(height: 12),
-                  Row(
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 8,
                     children: [
                       FilledButton.icon(
                         onPressed: () async {
                           Navigator.of(context).pop();
-                          await _copyLines(
-                            matches,
-                            t: t,
-                            notifications: notifications,
-                          );
+                          await _copyLines(matches, t: t, notifications: notifications, paths: paths);
                         },
                         icon: const Icon(FluentIcons.copy_20_regular, size: 18),
                         label: Text(t.common.addToClipboard),
                       ),
-                      const SizedBox(width: 10),
                       OutlinedButton.icon(
                         onPressed: () async {
                           Navigator.of(context).pop();
-                          await _exportLines(
-                            matches,
-                            t: t,
-                            notifications: notifications,
-                            paths: paths,
-                          );
+                          await _exportLines(matches, t: t, notifications: notifications, paths: paths);
                         },
-                        icon: const Icon(
-                          FluentIcons.arrow_download_20_regular,
-                          size: 18,
-                        ),
+                        icon: const Icon(FluentIcons.arrow_download_20_regular, size: 18),
                         label: Text(t.pages.logs.exportToFile),
                       ),
                     ],
@@ -169,10 +148,11 @@ class _LogsRecentModalState extends ConsumerState<LogsRecentModal> {
 /// instead of leaving the user with nothing.
 Future<void> _copyLines(
   List<LogRecord> records, {
+  required LogPathResolver paths,
   required Translations t,
   required InAppNotificationController notifications,
 }) async {
-  final text = _diagnosticText(records);
+  final text = await buildDiagnosticReport(records, paths.directory);
 
   try {
     await Clipboard.setData(ClipboardData(text: text));
@@ -191,7 +171,7 @@ Future<void> _exportLines(
 }) async {
   final target = paths.appExportFile();
 
-  await target.writeAsString(_diagnosticText(records), flush: true);
+  await target.writeAsString(await buildDiagnosticReport(records, paths.directory), flush: true);
   await _saveFileAs(target, t: t, notifications: notifications);
 }
 
@@ -210,9 +190,7 @@ Future<void> _saveFileAs(
   // saveFile only asks where to put it. On desktop it writes nothing and
   // ignores `bytes` — on macOS it throws when they are passed — so copying the
   // file over is ours to do. Reporting success without it was a lie.
-  final saveTo = await FilePicker.platform.saveFile(
-    fileName: file.uri.pathSegments.last,
-  );
+  final saveTo = await FilePicker.platform.saveFile(fileName: file.uri.pathSegments.last);
   if (saveTo == null) return;
 
   try {
@@ -223,13 +201,3 @@ Future<void> _saveFileAs(
     notifications.showErrorToast(t.pages.logs.fileSaveFailed);
   }
 }
-
-String _diagnosticText(Iterable<LogRecord> records) => exportDiagnostics(
-  records.map(
-    (record) => DiagnosticEvent.classify(
-      at: record.time,
-      level: record.level.value,
-      message: record.message,
-    ),
-  ),
-);

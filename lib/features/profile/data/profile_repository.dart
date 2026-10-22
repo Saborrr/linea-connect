@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:hiddify/features/linea/model/amneziawg_import.dart';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
@@ -275,8 +277,16 @@ class ProfileRepositoryImpl with ExceptionHandler, InfraLogger implements Profil
 
   @override
   TaskEither<ProfileFailure, Unit> validateConfig(String path, String tempPath, String? profileOverride, bool debug) =>
-      TaskEither.fromEither(_configOptionRepo.fullOptionsOverrided(profileOverride))
-          .mapLeft((configOptionFailure) => ProfileFailure.invalidConfig(null, configOptionFailure))
+      TaskEither<ProfileFailure, Unit>.tryCatch(() async {
+            final issue = AmneziaWgImport.validate(await File(tempPath).readAsString());
+            if (issue != null) throw ProfileFailure.invalidConfig(issue);
+            return unit;
+          }, (error, stack) => error is ProfileFailure ? error : ProfileFailure.unexpected(error, stack))
+          .flatMap(
+            (_) => TaskEither.fromEither(
+              _configOptionRepo.fullOptionsOverrided(profileOverride),
+            ).mapLeft((failure) => ProfileFailure.invalidConfig(null, failure)),
+          )
           .flatMap(
             (overridedOptions) => _singbox
                 .changeOptions(overridedOptions)

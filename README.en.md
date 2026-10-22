@@ -7,7 +7,11 @@ Initial development revision. The Android debug APK built successfully in
 [GitHub Actions](https://github.com/Saborrr/linea-connect/actions/runs/39770773497),
 with 203 Flutter tests passing. Another 39 policy/privacy checks passed in CI.
 [Download the APK archive](https://github.com/Saborrr/linea-connect/actions/runs/39770773497/artifacts/12422677153).
-Device installation, live connectivity and Apple builds have not been validated.
+[Unsigned macOS compile artifact](https://github.com/Saborrr/linea-connect/actions/runs/39772943128/artifacts/12423507837)
+and [unsigned iOS app with Packet Tunnel](https://github.com/Saborrr/linea-connect/actions/runs/39775224921/artifacts/12423749948)
+are also available. The iOS archive contains an app bundle, not an installable IPA.
+Device installation, live connectivity and Apple distribution
+signing have not been validated.
 Public fork: https://github.com/Saborrr/linea-connect.
 
 Changes: a distinct compact home screen and icons, separate app identifiers,

@@ -5,4 +5,13 @@ Android run 39770773497: success, 203 Flutter tests, APK build and upload.
 Build source: 6aec6fbdce0ac90a3e0b8c90fecf748e7806e5d9
 Artifact: 12422677153, Linea-Android-development
 Artifact ZIP SHA256: b64d54f9aec4780fd43e8ec6cf0ad6fe9c430fe53937487dbd7c5e23b18922b8
+macOS compile: success, unsigned app bundle archived and uploaded.
+Apple run: 39772943128, build source: 3d4eb4005c0892f357bd5aebfc3c0b975ca021ac
+macOS artifact: 12423507837, Linea-macos-unsigned-compile
+macOS artifact ZIP SHA256: 9204ee3203e9677a4c809586a9e68081b78721003f89213e593cc8f99c44da65
+iOS run 39775224921: success, unsigned app and Packet Tunnel built and uploaded.
+iOS source: 6c91c3844556985bc84e4aa816105d892a670879
+iOS artifact: 12423749948, Linea-ios-unsigned-compile
+iOS artifact ZIP SHA256: 7cec06ceef19996bcf19c2107f7502f759fd1d67f7940dd2315d9dae798e50d0
+iOS AppIcon: 19 slots validated for dimensions and opaque RGB.
 No physical-device or user-server connectivity tests performed.

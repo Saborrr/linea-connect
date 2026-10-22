@@ -4,14 +4,21 @@
 [Hiddify](https://github.com/hiddify/hiddify-app). Рабочее имя: Linea.
 
 **Статус: начальная development-версия. Android APK собран в GitHub Actions.
+iOS и macOS успешно скомпилированы без подписи.
 Работа на устройствах и подключение к серверу пользователя ещё не проверены.**
 
 - [Скачать Android APK в архиве GitHub Actions](https://github.com/Saborrr/linea-connect/actions/runs/39770773497/artifacts/12422677153)
 - [Успешная Android-сборка и 203 Flutter-теста](https://github.com/Saborrr/linea-connect/actions/runs/39770773497)
 - [39 проверок политики и приватности](https://github.com/Saborrr/linea-connect/actions/runs/39770618715)
+- [Неподписанная macOS app для разработки, архив](https://github.com/Saborrr/linea-connect/actions/runs/39772943128/artifacts/12423507837)
+- [Неподписанная iOS app для разработки, архив](https://github.com/Saborrr/linea-connect/actions/runs/39775224921/artifacts/12423749948)
 
-Артефакт собран из коммита `6aec6fbdce0ac90a3e0b8c90fecf748e7806e5d9`.
-Это debug-сборка для испытаний; IPA и macOS app пока не собраны и не подписаны.
+Android-артефакт собран из коммита `6aec6fbdce0ac90a3e0b8c90fecf748e7806e5d9`.
+Это debug-сборка для испытаний. Mac app скомпилирована без подписи из
+`3d4eb4005c0892f357bd5aebfc3c0b975ca021ac`; запуск на Mac не проверен.
+iOS app и Packet Tunnel собраны из `6c91c3844556985bc84e4aa816105d892a670879`.
+Это app bundle для последующей подписи, не установочный IPA.
+Подписанные Apple-сборки пока не подготовлены.
 
 ## Что изменено
 

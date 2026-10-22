@@ -57,10 +57,23 @@ release keystore и отдельный workflow подписи. Ключи не 
 
 ## iPhone
 
+Компиляция приложения и Packet Tunnel завершилась успешно:
+https://github.com/Saborrr/linea-connect/actions/runs/39775224921.
+Исходный коммит: `6c91c3844556985bc84e4aa816105d892a670879`.
+Артефакт: https://github.com/Saborrr/linea-connect/actions/runs/39775224921/artifacts/12423749948.
+Внутри находится `Linea-iOS-unsigned.zip` с неподписанной Runner.app.
+Это не IPA для установки и не подтверждение работы VPN на iPhone.
+
 Workflow **Linea Apple compile checks** проверяет компиляцию iOS и macOS без
 сертификатов и сохраняет неподписанные app bundles. Это проверка сборки, а не
 готовые для установки IPA или notarized Mac app. Встроенная Packet Tunnel
 extension также должна быть подписана собственными provisioning profiles.
+При запуске workflow можно выбрать `all`, `ios` или `macos`.
+
+Значок iOS хранится в стандартном `AppIcon.appiconset`, совместимом с asset
+compiler CI. Скрипт `python tool/generate_ios_icons.py` пересоздаёт все размеры
+Linea из собственной геометрии; для него нужен Pillow. Каталог уже закоммичен,
+при обычной сборке запускать генератор не требуется.
 
 ```sh
 make ios-prepare
@@ -75,6 +88,11 @@ Hiddify удалён. Проверять туннель на физическо�
 Выпускные сборки оформлять через GitHub Actions с сертификатами в Secrets.
 
 ## Mac
+
+Неподписанная macOS app успешно скомпилирована в Apple CI из коммита `3d4eb40`.
+Архив: https://github.com/Saborrr/linea-connect/actions/runs/39772943128/artifacts/12423507837.
+Внутри артефакта GitHub находится `Linea-macOS-unsigned.zip` с app bundle.
+Это не подписанный и не notarized выпуск; установка, запуск и TUN не проверялись.
 
 ```sh
 make macos-prepare

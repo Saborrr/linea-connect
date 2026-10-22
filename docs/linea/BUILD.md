@@ -57,6 +57,11 @@ release keystore и отдельный workflow подписи. Ключи не 
 
 ## iPhone
 
+Workflow **Linea Apple compile checks** проверяет компиляцию iOS и macOS без
+сертификатов и сохраняет неподписанные app bundles. Это проверка сборки, а не
+готовые для установки IPA или notarized Mac app. Встроенная Packet Tunnel
+extension также должна быть подписана собственными provisioning profiles.
+
 ```sh
 make ios-prepare
 open ios/Runner.xcworkspace

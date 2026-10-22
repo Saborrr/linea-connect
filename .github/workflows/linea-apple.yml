@@ -1,0 +1,55 @@
+name: Linea Apple compile checks
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  apple:
+    name: ${{ matrix.platform }} unsigned compile
+    runs-on: macos-15
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ios, macos]
+    env:
+      CI: 'true'
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2.21.0
+        with:
+          flutter-version: '3.38.5'
+          channel: stable
+          cache: true
+      - name: Prepare generated Dart code and upstream development core
+        run: make ${{ matrix.platform }}-prepare
+      - name: Compile iPhone app and Packet Tunnel without signing
+        if: matrix.platform == 'ios'
+        run: flutter build ios --release --no-codesign
+      - name: Configure macOS app
+        if: matrix.platform == 'macos'
+        run: flutter build macos --release --config-only
+      - name: Compile macOS app without signing
+        if: matrix.platform == 'macos'
+        run: >-
+          xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner
+          -configuration Release -derivedDataPath build/macos
+          CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=''
+          build
+      - name: Archive unsigned iOS app
+        if: matrix.platform == 'ios'
+        run: >-
+          ditto -c -k --sequesterRsrc --keepParent
+          build/ios/iphoneos/Runner.app Linea-iOS-unsigned.zip
+      - name: Archive unsigned macOS app
+        if: matrix.platform == 'macos'
+        run: >-
+          ditto -c -k --sequesterRsrc --keepParent
+          build/macos/Build/Products/Release/Linea.app Linea-macOS-unsigned.zip
+      - uses: actions/upload-artifact@v6
+        with:
+          name: Linea-${{ matrix.platform }}-unsigned-compile
+          path: Linea-*-unsigned.zip
+          if-no-files-found: error
+          retention-days: 30
